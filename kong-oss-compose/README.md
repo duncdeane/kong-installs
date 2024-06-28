@@ -105,6 +105,12 @@ style id2 stroke-dasharray:3,rx:10,ry:10
 
 #### Start gateway with a database
 
+1. Create a password file with the Postgres database
+
+    ```
+    echo "<your-password-here>" > POSTGRES_PASSWORD
+    ```
+
 1. Navigate to the OSS compose directory
 
     ```
