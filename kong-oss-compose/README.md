@@ -26,10 +26,10 @@ This Docker Compose file can be used to easily stand up Kong OSS in either db-le
 
 flowchart TD
 
-A(<img src="https://raw.githubusercontent.com/Kong/docs.konghq.com/main/app/assets/images/logos/kogo-white.svg" style="max-height:20px" class="no-image-expand"> Kong Gateway instance)
+A(<img src="images/logos/kogo-white.svg" style="max-height:20px" class="no-image-expand"> Kong Gateway instance)
 A2(fa:fa-file kong.yml)
 
-B(<img src="https://raw.githubusercontent.com/Kong/docs.konghq.com/main/app/assets/images/logos/kogo-white.svg" style="max-height:20px" class="no-image-expand"> Kong Gateway instance)
+B(<img src="images/logos/kogo-white.svg" style="max-height:20px" class="no-image-expand"> Kong Gateway instance)
 B2(fa:fa-database PostgreSQL)
 
 subgraph id2 [Kong OSS #40;with database#41;]
@@ -97,7 +97,7 @@ style id2 stroke-dasharray:3,rx:10,ry:10
     $ docker compose up -d
     ```
 
-    Alternatively run the **oss-up*** script
+    Alternatively run the **oss-up** script
 
     ```
     ./oss-up.sh db-less
@@ -122,7 +122,7 @@ style id2 stroke-dasharray:3,rx:10,ry:10
     KONG_DATABASE=postgres docker compose --profile database up -d
     ```
 
-    Alternatively run the **oss-up*** script
+    Alternatively run the **oss-up** script
 
     ```shell
     ./oss-up.sh database
@@ -141,7 +141,7 @@ style id2 stroke-dasharray:3,rx:10,ry:10
 docker compose down
 ```
 
-Alternatively run the **oss-up*** script
+Alternatively run the **oss-up** script
 
 ```shell
 ./oss-down.sh db-less
@@ -151,7 +151,7 @@ Alternatively run the **oss-up*** script
 docker compose --profile database down 
 ```
 
-Alternatively run the **oss-up*** script
+Alternatively run the **oss-up** script
 
 ```shell
 ./oss-down.sh database
