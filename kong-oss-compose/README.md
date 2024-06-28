@@ -40,11 +40,8 @@ subgraph id1 [Kong OSS #40;db-less#41;]
 A & A2
 end
 
-
-
 A --> A2
 B --> B2
-
 
 style A stroke:none,fill:#0E44A2,color:#fff
 style B stroke:none,fill:#0E44A2,color:#fff
@@ -52,7 +49,6 @@ style id1 stroke-dasharray:3,rx:10,ry:10
 style id2 stroke-dasharray:3,rx:10,ry:10
 
 ```
-
 ## How to run the Gateway
 
 #### Start gateway in DB-Less mode
@@ -95,7 +91,6 @@ style id2 stroke-dasharray:3,rx:10,ry:10
 
     ```
 
-
 3. Start the gateway using docker compose
 
     ```shell
@@ -132,3 +127,26 @@ style id2 stroke-dasharray:3,rx:10,ry:10
     ```shell
     deck gateway sync config/kong.yaml
     ```
+
+## How to stop the Gateway
+
+#### Stop the db-less gateway
+```shell
+docker compose down
+```
+
+Alternatively run the **oss-up*** script
+
+```shell
+./oss-down.sh db-less
+```
+#### Stop the database-enabled gateway
+```shell
+docker compose --profile database down 
+```
+
+Alternatively run the **oss-up*** script
+
+```shell
+./oss-down.sh database
+```
