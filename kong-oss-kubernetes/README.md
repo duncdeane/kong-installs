@@ -1,4 +1,4 @@
-# Kong Deployment on KinD (Kubernetes-in-Docker)
+# Kong OSS Deployment (DBLESS)
 
 This guide describes how to deploy **Kong Gateway OSS** in **DB-less mode** on a KinD cluster, and then migrate it to **Kong Enterprise**.
 
