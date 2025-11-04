@@ -1,0 +1,75 @@
+# Basic values.yaml for Kong for Kubernetes with Kong Enterprise (DB-less)
+# Several settings (search for the string "CHANGEME") require user-provided
+# Secrets. These Secrets must be created before installation.
+
+image:
+  repository: kong/kong-gateway
+  tag: "3.10"
+
+env:
+  database: "off"
+  router_flavor: "traditional"
+  proxy_access_log: /dev/stdout
+  admin_access_log: /dev/stdout
+  admin_gui_access_log: /dev/stdout
+  portal_api_access_log: /dev/stdout
+  proxy_error_log: /dev/stderr
+  admin_error_log: /dev/stderr
+  admin_gui_error_log: /dev/stderr
+  portal_api_error_log: /dev/stderr
+  prefix: /kong_prefix/
+
+ingressController:
+  enabled: false
+
+proxy:
+  http:
+    enabled: true
+    nodePort: 30000
+  tls:
+    enabled: true
+    nodePort: 30443
+  type: NodePort
+  ingress:
+    enabled: true
+
+enterprise:
+  enabled: false
+
+admin:
+  enabled: true
+  type: NodePort
+  http:
+    enabled: true
+    nodePort: 30001
+  tls:
+    enabled: true
+    nodePort: 30501
+  ingress:
+    enabled: true
+
+manager:
+  enabled: true
+  type: NodePort
+  http:
+    nodePort: 30002
+  tls:
+    enabled: true
+    nodePort: 30500
+  ingress:
+    enabled: true
+
+enterprise:
+ enabled: true
+ license_secret: kong-enterprise-license
+ 
+readinessProbe:
+  httpGet:
+    path: "/status"
+
+status:
+  enabled: true
+  type: ClusterIP
+
+dblessConfig:
+  configMap: "kong-config"

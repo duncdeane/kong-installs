@@ -33,16 +33,11 @@ http http://localhost:80/mock
 # deck gateway sync config/kong.yml --kong-addr http://localhost:30001
 
 
-# If you want to upgrade to Kong Enterprise dbless
+# Migrate from Kong OSS to Kong Enterprise in DB-less mode
 
-# Update the helm values file to point to the Enterprise image and enable the enterprise settings
-# Update the image repository and tag
-# Set enterprise.enabled to true
-# Set the license_secret to the name of the secret you crreate for the license
-
-# First create the Kong Enterprise license secret
+# Step 1: Create the Kong Enterprise license secret
 kubectl create secret generic kong-enterprise-license -n kong \
   --from-literal=license="$KONG_LICENSE_DATA"
 
-# Then upgrade the release with the new values
-helm upgrade kong-oss kong/kong -n kong --values values-oss-to-ee-dbless.yaml
+# Step 2: Upgrade the release with the new values
+helm upgrade kong-oss kong/kong -n kong --values values-ee-dbless.yaml
