@@ -14,7 +14,7 @@ services:
     name: mockbin_route
     path_handling: v0
     paths:
-    - /mock
+    - /mocks
     preserve_host: false
     protocols:
     - http

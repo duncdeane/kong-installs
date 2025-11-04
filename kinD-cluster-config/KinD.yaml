@@ -27,11 +27,3 @@ nodes:
   - containerPort: 30500
     hostPort: 30500 # Manager
     protocol: TCP
-
-    
-    # kind create cluster --name yourClusterName --config=KinD.yaml
-    #
-    # We can leverage KIND’s extraPortMapping config option
-    # when creating a cluster to forward ports from the host
-    # to KIC/Gateway & for inter-host communication:
-    # https://kind.sigs.k8s.io/docs/user/ingress/

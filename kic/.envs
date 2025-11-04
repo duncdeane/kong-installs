@@ -1,0 +1,3 @@
+export KONG_ADMIN_GUI_URL="http://manager.kong.lan"
+export KONG_ADMIN_GUI_API_URL="http://admin.kong.lan"
+export KONG_PROXY_URL="http://proxy.kong.lan"

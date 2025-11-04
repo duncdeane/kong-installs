@@ -1,0 +1,106 @@
+# Do not use Kong Ingress Controller
+ingressController:
+  enabled: false
+image:
+  repository: kong/kong-gateway
+  tag: "3.1.1.6"
+# Mount the secret created earlier
+secretVolumes:
+  - kong-cluster-cert
+env:
+  # This is a control_plane node
+  role: control_plane
+  # These certificates are used for control plane / data plane communication
+  cluster_cert: /etc/secrets/kong-cluster-cert/tls.crt
+  cluster_cert_key: /etc/secrets/kong-cluster-cert/tls.key
+  # Database
+  # CHANGE THESE VALUES
+  database: "postgres"
+  pg_host: "kong-postgresql" # Uses the internal PostgreSQL service name
+  pg_user: "kong"
+  pg_password:
+    valueFrom:
+      secretKeyRef:
+        name: kong-enterprise-db-password
+        key: password
+  # Kong Manager password
+  password:
+    valueFrom:
+      secretKeyRef:
+        name: kong-enterprise-superuser-password
+        key: password
+  enforce_rbac: "on"
+  admin_gui_auth: "basic-auth"
+  admin_gui_session_conf:
+    valueFrom:
+      secretKeyRef:
+        name: kong-session-config
+        key: admin_gui_session_conf
+
+  admin_api_uri: http://localhost:30001
+  # admin_gui_api_url: http://localhost:30001
+  admin_gui_url: http://localhost:30002
+  proxy_url: http://localhost:30000
+# Enterprise functionality
+enterprise:
+  enabled: true
+  license_secret: kong-enterprise-license
+  vitals:
+    enabled: false
+  portal:
+    enabled: false
+  rbac:
+    enabled: false
+# The control plane serves the Admin API
+admin:
+  enabled: true
+  http:
+    enabled: true
+    nodePort: 30001
+  tls:
+    enabled: true
+    nodePort: 30501
+# Clustering endpoints are required in hybrid mode
+cluster:
+  enabled: true
+  tls:
+    enabled: true
+    servicePort: 8005
+    containerPort: 8005
+clustertelemetry:
+  enabled: true
+  tls:
+    enabled: true
+    servicePort: 8006
+    containerPort: 8006
+# Optional features
+manager:
+  enabled: true
+  type: NodePort
+  http:
+    enabled: true
+    nodePort: 30002
+  tls:
+    enabled: true
+    nodePort: 30500
+  ingress:
+    enabled: true
+    path: /*
+status:
+  enabled: true
+  type: ClusterIP
+# These roles will be served by different Helm releases
+proxy:
+  enabled: false
+portal:
+  enabled: false
+portalapi:
+  enabled: false
+postgresql:
+  enabled: true # Enable PostgreSQL container
+  postgresqlUsername: kong
+  postgresqlDatabase: kong
+  existingSecret: kong-enterprise-db-password
+  existingSecretKey: password
+  service:
+    port: 5432

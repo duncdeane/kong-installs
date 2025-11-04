@@ -1,158 +1,131 @@
-# Kong OSS in Docker Compose
+# Deploy Kong OSS (DB-less)
 
-This Docker Compose file can be used to easily stand up Kong OSS in either db-less or database mode. 
+This README is a simple, step-by-step guide to deploy Kong OSS in DB-less mode using the Helm chart and the helper script `deploy-oss-dbless.sh` in this directory.
 
-```mermaid
+Run the commands from the `kong-oss-kubernetes` directory.
 
-%%{
-  init: {
-  'theme': 'base',
-  'themeVariables': {
-    'primaryColor': '#fff',
-    'primaryBorderColor': '#4a86e8',
-    'primaryTextColor': '#495c64',
-    'secondaryColor': '#fff',
-    'secondaryTextColor': '#5096f2',
-    'tertiaryBorderColor': '#AAB4BB',
-    'edgeLabelBackground': '#fff',
-    'fontFamily': 'Arial',
-    'fontSize': '15px',
-    'lineColor': '#99b0c0',
-    'activationBorderColor': '#c2d4e0',
-    'sequenceNumberColor': '#fff'
-  }
-}
-}%%
+## Prerequisites
 
-flowchart TD
+- kind (Kubernetes in Docker)
+- kubectl (configured to your cluster)
+- helm v3
+- httpie or curl (for basic HTTP tests)
+- (optional) deck if you manage config with decK
 
-A(<img src="https://raw.githubusercontent.com/duncdeane/kong-installs/main/images/logos/kogo-white.svg" style="max-height:20px" class="no-image-expand"> Kong Gateway instance)
-A2(fa:fa-file kong.yml)
+## Files referenced
 
-B(<img src="https://raw.githubusercontent.com/duncdeane/kong-installs/main/images/logos/kogo-white.svg" style="max-height:20px" class="no-image-expand"> Kong Gateway instance)
-B2(fa:fa-database PostgreSQL)
+- `deploy-oss-dbless.sh` — convenience script that automates the steps in this README
+- `values-oss-dbless.yaml` — Helm values for an OSS DB-less Kong installation
+- `values-oss-to-ee-dbless.yaml` — example values file for upgrading to Kong Enterprise (DB-less)
+- `config/kong.yml` — your DB-less Kong configuration file
 
-subgraph id2 [Kong OSS #40;with database#41;]
-B & B2
-end
+## Steps
 
-subgraph id1 [Kong OSS #40;db-less#41;]
-A & A2
-end
+1. Create a KinD cluster (optional)
 
-A --> A2
-B --> B2
-
-style A stroke:none,fill:#0E44A2,color:#fff
-style B stroke:none,fill:#0E44A2,color:#fff
-style id1 stroke-dasharray:3,rx:10,ry:10
-style id2 stroke-dasharray:3,rx:10,ry:10
-
+```bash
+kind create cluster --name kind --config=../kinD-cluster-config/KinD.yaml
 ```
-## How to run the Gateway
 
-#### Start gateway in DB-Less mode
+2. Add and update the Kong Helm repo
 
-1. Navigate to the OSS compose directory
+```bash
+helm repo add kong https://charts.konghq.com || true
+helm repo update
+```
 
-    ```
-    cd kong-oss-compose
-    ```
+3. (Re)create the `kong` namespace
 
-2. Set declaritive config in ***config/kong.yaml***. (An example service and route has already been populated)
+> WARNING: deleting the namespace will remove all Kong resources and data in that namespace.
 
-    ```
-    _format_version: "3.0"
-    services:
-    - connect_timeout: 60000
+```bash
+# (optional) delete existing namespace
+kubectl delete namespace kong || true
+
+# create namespace
+kubectl create namespace kong
+```
+
+4. Create the DB-less ConfigMap (contains your `kong.yml`)
+
+```bash
+kubectl create configmap kong-config --from-file=config/kong.yml -n kong --dry-run=client -o yaml | kubectl apply -f -
+```
+
+5. Install Kong OSS (DB-less)
+
+```bash
+helm install kong-oss kong/kong -n kong --values values-oss-dbless.yaml --wait --timeout 300s
+```
+
+6. Smoke test the default service
+
+```bash
+# using httpie
+http http://localhost:80/mock
+
+# or using curl
+curl -i http://localhost:80/mock
+```
+
+## Optional: manage Kong config with decK
+
+If you use decK to manage Kong configuration, sync local config to the gateway after deployment:
+
+```bash
+# deck gateway sync config/kong.yml --kong-addr http://localhost:30001
+```
+
+## Optional: Upgrade to Kong Enterprise (DB-less)
+
+1. Edit `values-oss-to-ee-dbless.yaml` so it enables enterprise and points to a license secret:
+
+```yaml
+enterprise:
     enabled: true
-    host: mock.insomnia.rest
-    name: mockbin_service
-    path: /request
-    port: 443
-    protocol: https
-    read_timeout: 60000
-    retries: 5
-    routes:
-    - https_redirect_status_code: 426
-        name: mockbin_route
-        path_handling: v0
-        paths:
-        - /mock
-        preserve_host: false
-        protocols:
-        - http
-        - https
-        regex_priority: 0
-        request_buffering: true
-        response_buffering: true
-        strip_path: true
-    write_timeout: 60000
-
-    ```
-
-3. Start the gateway using docker compose
-
-    ```shell
-    $ docker compose up -d
-    ```
-
-    Alternatively run the **oss-up** script
-
-    ```
-    ./oss-up.sh db-less
-    ```
-
-#### Start gateway with a database
-
-1. Create a password file with the Postgres database
-
-    ```
-    echo "<your-password-here>" > POSTGRES_PASSWORD
-    ```
-
-1. Navigate to the OSS compose directory
-
-    ```
-    cd kong-oss-compose
-    ```
-2. Start the gateway using docker compose
-
-    ```shell
-    KONG_DATABASE=postgres docker compose --profile database up -d
-    ```
-
-    Alternatively run the **oss-up** script
-
-    ```shell
-    ./oss-up.sh database
-    ```
-
-3. Deploy sample config to database
-
-    ```shell
-    deck gateway sync config/kong.yaml
-    ```
-
-## How to stop the Gateway
-
-#### Stop the db-less gateway
-```shell
-docker compose down
+    license_secret: kong-enterprise-license
 ```
 
-Alternatively run the **oss-up** script
 
-```shell
-./oss-down.sh db-less
-```
-#### Stop the database-enabled gateway
-```shell
-docker compose --profile database down 
+- Create the Enterprise license secret (two options):
+
+```bash
+# from environment variable KONG_LICENSE_DATA
+kubectl create secret generic kong-enterprise-license -n kong \
+    --from-literal=license="$KONG_LICENSE_DATA"
+
+# or from a local file
+# kubectl create secret generic kong-enterprise-license -n kong --from-file=license=./kong-license.json
 ```
 
-Alternatively run the **oss-up** script
+- Run the Helm upgrade
 
-```shell
-./oss-down.sh database
+```bash
+helm upgrade kong-oss kong/kong -n kong --values values-oss-to-ee-dbless.yaml --wait --timeout 300s
 ```
+
+## Verification and troubleshooting
+
+- Check pods and rollout status:
+
+```bash
+kubectl -n kong get pods
+kubectl -n kong rollout status deployment kong-kong --timeout=300s || true
+```
+
+- Inspect a pod to confirm image and env vars (license usage):
+
+```bash
+kubectl -n kong describe pod <pod-name>
+```
+
+- If Helm errors about incompatible values, pin the chart version with `--version` to the same chart used previously.
+
+## Notes
+
+- Keep DB-less mode with `env.database: "off"` and ensure `dblessConfig.configMap` points to `kong-config`.
+- Be careful deleting the `kong` namespace — it removes all Kong resources and data in that namespace.
+
+---
+
+Generated from `deploy-oss-dbless.sh` in this repository.
